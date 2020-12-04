@@ -1,6 +1,6 @@
-import pygame                                           # Stellt Objekte und Konstanten zur Spielprogrammierung zur Verfügung
-from pygame.constants import (                          # Verhindert verteilte Warnungen des Editors
-    QUIT, KEYDOWN, KEYUP, K_ESCAPE, K_LEFT, K_RIGHT, K_UP, K_DOWN
+import pygame                                           
+from pygame.constants import (                          
+    QUIT, KEYDOWN, KEYUP, K_ESCAPE, K_LEFT, K_RIGHT, K_UP, K_DOWN, K_SPACE
 )
 import os
 import random
@@ -29,47 +29,31 @@ class Defender(pygame.sprite.Sprite):
     def __init__(self, settings):
         pygame.sprite.Sprite.__init__(self)
         self.settings = settings
-        self.image = pygame.image.load(os.path.join(self.settings.images_path, "Asteroid-Man.png")).convert_alpha()
-        self.image = pygame.transform.scale(self.image, (45, 42))
+        self.image = pygame.image.load(os.path.join(self.settings.images_path, "Monster.png")).convert_alpha()
+        self.image = pygame.transform.scale(self.image, (70, 70))
         self.rect = self.image.get_rect()
         self.rect.left = (settings.width - self.rect.width) // 2
         self.rect.top = settings.height - self.rect.height - 10
-        self.direction = 0
+        self.directionx = 0
+        self.directiony = 0
         self.speed = 5
 
     def update(self):
 
-        newleft = self.rect.left + (self.direction * self.speed)
+        newleft = self.rect.left + (self.directionx * self.speed)
         newright = newleft + self.rect.width
-        newtop = self.rect.top + (self.direction * self.speed) 
+        newtop = self.rect.top + (self.directiony * self.speed) 
         newbottom = newtop + self.rect.height
         if newleft > 0 and newright < settings.width:
             self.rect.left = newleft
         if newtop > 0 and newbottom < settings.height:
             self.rect.top = newtop
 
+    def respawn(self):
 
-class Enemy(pygame.sprite.Sprite):
+        self.rect.left = random.randint(0, self.settings.width-self.rect.width)
+        self.rect.top = random.randint(0, self.settings.height-self.rect.height)
 
-    def __init__(self, settings):
-        pygame.sprite.Sprite.__init__(self)
-        self.settings = settings
-        self.image = pygame.image.load(os.path.join(self.settings.images_path, "Asteroid1.png")).convert_alpha()
-        self.rect = self.image.get_rect()
-        self.rect.left = random.randint(0, 300) 
-        self.rect.top = random.randint(0, 300) 
-        self.direction = 1
-        self.speed = 2
-
-    def update(self):
-
-        newleft = self.rect.left + (self.direction * self.speed)
-        newright = newleft + self.rect.width
-        if newleft <= 0:
-            self.direction = 300
-        if newright >= settings.width:
-            self.direction = -1
-        self.rect.left += (self.direction * self.speed) 
 
 class Game(object):
     def __init__(self, pygame, settings):
@@ -77,7 +61,7 @@ class Game(object):
         self.settings = settings
         self.screen = pygame.display.set_mode(settings.get_dim())
         self.pygame.display.set_caption(self.settings.title)
-        self.background = self.pygame.image.load(os.path.join(self.settings.images_path, "background.png")).convert()
+        self.background = self.pygame.image.load(os.path.join(self.settings.images_path, "Oma.png")).convert()
         self.background_rect = self.background.get_rect()
         self.defender = Defender(settings)
         self.clock = pygame.time.Clock()
@@ -86,55 +70,54 @@ class Game(object):
         self.all_defenders = pygame.sprite.Group()
         self.all_defenders.add(self.defender)
 
-        self.all_enemies = pygame.sprite.Group()
-        for n in range (0, 4):
-            self.all_enemies.add(Enemy(settings))
-
+        
 
     def run(self):
-        while not self.done:                            # Hauptprogrammschleife mit Abbruchkriterium   
-            self.clock.tick(self.settings.fps)          # Setzt die Taktrate auf max 60fps   
-            for event in self.pygame.event.get():       # Durchwandere alle aufgetretenen  Ereignisse
-                if event.type == QUIT:                  # Wenn das rechts obere X im Fenster geklickt
-                    self.done = True                    # Flag wird auf Ende gesetzt
-                elif event.type == KEYDOWN:             # Reagiere auf Taste drücken
+        while not self.done:                            
+            self.clock.tick(self.settings.fps)          
+            for event in self.pygame.event.get():       
+                if event.type == QUIT:                 
+                    self.done = True 
+                elif event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        self.done = True                        
                     if event.key == K_ESCAPE:
                         self.done = True
                     if event.key == K_LEFT:
-                        self.defender.direction = -1
+                        self.defender.directionx = -1
                     elif event.key == K_RIGHT:
-                        self.defender.direction = 1
+                        self.defender.directionx = 1
                     elif event.key == K_UP:
-                        self.defender.direction = -1
+                        self.defender.directiony = -1
                     elif event.key == K_DOWN:
-                            self.defender.direction = 1  
-                elif event.type == KEYUP:               # Reagiere auf Taste loslassen
-                    if event.key == K_LEFT or event.key == K_RIGHT or event.key == K_UP or event.key == K_DOWN:
-                        self.defender.direction = 0
+                            self.defender.directiony = 1  
+                elif event.type == KEYUP:               
+                    if event.key == K_LEFT or event.key == K_RIGHT:
+                        self.defender.directionx = 0
+                    if event.key == K_UP or event.key == K_DOWN:
+                        self.defender.directiony = 0
+                    if event.key == K_SPACE: 
+                        self.defender.respawn()
+                        
             self.update()
             self.draw()
  
     def draw(self):
         self.screen.blit(self.background, self.background_rect)
         self.all_defenders.draw(self.screen)
-        self.all_enemies.draw(self.screen)
-        self.pygame.display.flip()   # Aktualisiert das Fenster
+        self.pygame.display.flip()  
 
     def update(self):
         self.all_defenders.update()
-        self.all_enemies.update()
 
 
-if __name__ == '__main__':      # 
-                                    
+if __name__ == '__main__':     
     settings = Settings()
-# pylint: disable=no-member
-    pygame.init()               # Bereitet die Module zur Verwendung vor  
-# pylint: enable=no-member
+
+    pygame.init()              
     game = Game(pygame, settings)
     game.run()
   
-# pylint: disable=no-member
-    pygame.quit()               # beendet pygame
-# pylint: enable=no-member
+
+    pygame.quit()              
 
