@@ -6,26 +6,20 @@ import os
 import random
 
 
-class Settings(object):
-
-
-    def __init__(self):
-
+class Settings(object):     #Settings speichert die allgemeinen Daten des Programmes ab um sie einfach abzurufen
+    def __init__(self): 
         self.width = 800
         self.height = 600
         self.fps = 60       
-        self.title = "ITA Invader" 
+        self.title = "Aufgabe 2 - Nick Scheffzik ITA19a" 
         self.file_path = os.path.dirname(os.path.abspath(__file__))
         self.images_path = os.path.join(self.file_path, "images")
         self.astedist = 15
 
-
     def get_dim(self):
-
         return (self.width, self.height)
 
-class Defender(pygame.sprite.Sprite):
-
+class Defender(pygame.sprite.Sprite):           #Classe "Defender" hat die gesamten informationen die zu dem bewegbarem Character gehören
     def __init__(self, settings):
         pygame.sprite.Sprite.__init__(self)
         self.settings = settings
@@ -38,8 +32,7 @@ class Defender(pygame.sprite.Sprite):
         self.directiony = 0
         self.speed = 5
 
-    def update(self):
-
+    def update(self):   #Variablen und if abfragen um den Defender zu bewegen
         newleft = self.rect.left + (self.directionx * self.speed)
         newright = newleft + self.rect.width
         newtop = self.rect.top + (self.directiony * self.speed) 
@@ -49,13 +42,11 @@ class Defender(pygame.sprite.Sprite):
         if newtop > 0 and newbottom < settings.height:
             self.rect.top = newtop
 
-    def respawn(self):
-
+    def respawn(self):  #Funktion um des Defender an einer neuen Position anzuzeigen
         self.rect.left = random.randint(0, self.settings.width-self.rect.width)
         self.rect.top = random.randint(0, self.settings.height-self.rect.height)
 
-
-class Game(object):
+class Game(object): #Alle hauptfunktionen des spieles so wie es im unterricht besprochen wurde
     def __init__(self, pygame, settings):
         self.pygame = pygame
         self.settings = settings
@@ -66,13 +57,10 @@ class Game(object):
         self.defender = Defender(settings)
         self.clock = pygame.time.Clock()
         self.done = False
-
         self.all_defenders = pygame.sprite.Group()
         self.all_defenders.add(self.defender)
 
-        
-
-    def run(self):
+    def run(self):  #Abspielen des Programmes und Tasteneingaben (Bewegen, Zufälliger sprung)
         while not self.done:                            
             self.clock.tick(self.settings.fps)          
             for event in self.pygame.event.get():       
@@ -97,27 +85,22 @@ class Game(object):
                     if event.key == K_UP or event.key == K_DOWN:
                         self.defender.directiony = 0
                     if event.key == K_SPACE: 
-                        self.defender.respawn()
-                        
+                        self.defender.respawn()                       
             self.update()
             self.draw()
  
-    def draw(self):
+    def draw(self): #Zeichnen von hintergrund und Defender
         self.screen.blit(self.background, self.background_rect)
         self.all_defenders.draw(self.screen)
         self.pygame.display.flip()  
 
-    def update(self):
+    def update(self):   #Updated die position des defenders
         self.all_defenders.update()
-
 
 if __name__ == '__main__':     
     settings = Settings()
-
     pygame.init()              
     game = Game(pygame, settings)
-    game.run()
-  
-
+    game.run()  
     pygame.quit()              
 
